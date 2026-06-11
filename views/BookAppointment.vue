@@ -46,13 +46,17 @@ export default {
       slots: []
     };
   },
-  mounted() {
+mounted() {
     fetch("https://u82hg3kqak.execute-api.us-east-1.amazonaws.com/prod/slots")
       .then(res => res.json())
       .then(data => {
-        const parsed = JSON.parse(data.body);
-        this.slots = parsed.filter(s => !s.isBooked).map(s => s.slot);
+        let body = data.body ? JSON.parse(data.body) : data;
+        this.slots = body.slots || [];
+      })
+      .catch(err => {
+        console.error("Error fetching slots:", err);
       });
+  },
   },
   methods: {
     submitAppointment() {
