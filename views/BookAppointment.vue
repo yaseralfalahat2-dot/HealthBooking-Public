@@ -1,4 +1,3 @@
-
 <template>
   <div>
     <nav class="navbar navbar-light bg-white shadow-sm mb-4">
@@ -7,7 +6,6 @@
         <router-link to="/appointments" class="btn btn-outline-primary">⇆ Switch Page</router-link>
       </div>
     </nav>
-
     <div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
       <div class="card shadow p-5" style="width: 100%; max-width: 700px;">
         <h2 class="text-center mb-4 text-primary">Book an Appointment</h2>
@@ -46,17 +44,14 @@ export default {
       slots: []
     };
   },
-mounted() {
+  mounted() {
     fetch("https://u82hg3kqak.execute-api.us-east-1.amazonaws.com/prod/slots")
       .then(res => res.json())
       .then(data => {
         let body = data.body ? JSON.parse(data.body) : data;
         this.slots = body.slots || [];
       })
-      .catch(err => {
-        console.error("Error fetching slots:", err);
-      });
-  },
+      .catch(err => console.error("Error fetching slots:", err));
   },
   methods: {
     submitAppointment() {
@@ -65,11 +60,10 @@ mounted() {
         symptoms: this.symptoms,
         slot: this.selectedSlot
       };
-
       fetch("https://u82hg3kqak.execute-api.us-east-1.amazonaws.com/prod/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: JSON.stringify(payload) })
+        body: JSON.stringify(payload)
       })
         .then(res => res.json())
         .then(() => {
