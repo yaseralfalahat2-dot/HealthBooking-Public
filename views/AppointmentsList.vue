@@ -3,31 +3,29 @@
     <nav class="navbar navbar-light bg-white shadow-sm mb-4">
       <div class="container d-flex justify-content-between align-items-center">
         <span class="fw-bold fs-5">Doctor Appointments</span>
-        <router-link to="/appointments" class="btn btn-outline-primary">⇆ Switch Page</router-link>
+        <router-link to="/" class="btn btn-outline-primary">⇆ Switch Page</router-link>
       </div>
     </nav>
-    <div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-      <div class="card shadow p-5" style="width: 100%; max-width: 700px;">
-        <h2 class="text-center mb-4 text-primary">Book an Appointment</h2>
-        <form class="row g-3" @submit.prevent="submitAppointment">
-          <div class="col-12">
-            <input v-model="name" type="text" class="form-control" placeholder="Your Name" required />
+    <div class="container mt-4">
+      <h2 class="text-center mb-4 text-primary">All Appointments</h2>
+      <div v-if="appointments.length === 0" class="text-center text-muted">
+        No appointments found.
+      </div>
+      <div v-for="appt in appointments" :key="appt.appointmentId" class="card shadow mb-3 p-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="mb-1">{{ appt.patientName }}</h5>
+            <small class="text-muted">Slot: {{ appt.slot }} | Symptoms: {{ appt.symptoms }}</small><br/>
+            <small class="text-muted">Created: {{ appt.createdAt }}</small>
           </div>
-          <div class="col-12">
-            <input v-model="symptoms" type="text" class="form-control" placeholder="Symptoms" required />
-          </div>
-          <div class="col-12">
-            <select v-model="selectedSlot" class="form-select" required>
-              <option disabled value="">Select a Time Slot</option>
-              <option v-for="slot in slots" :key="slot" :value="slot">
-                {{ slot }}
-              </option>
+          <div>
+            <select v-model="appt.status" @change="updateStatus(appt)" class="form-select form-select-sm" style="width: 150px;">
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
             </select>
           </div>
-          <div class="col-12">
-            <button type="submit" class="btn btn-primary w-100">Book</button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   </div>
@@ -37,50 +35,32 @@
 const API_BASE = "https://u82hg3kqak.execute-api.us-east-1.amazonaws.com/prod";
 
 export default {
-  name: "BookAppointment",
+  name: "AppointmentsList",
   data() {
     return {
-      name: "",
-      symptoms: "",
-      selectedSlot: "",
-      slots: []
+      appointments: []
     };
   },
   mounted() {
-    fetch(`${API_BASE}/slots`)
+    fetch(`${API_BASE}/appointments`)
       .then(res => res.json())
       .then(data => {
         let body = data.body ? JSON.parse(data.body) : data;
-        this.slots = body.slots || [];
+        this.appointments = body.appointments || [];
       })
       .catch(err => {
-        console.error("Error fetching slots:", err);
+        console.error("Error fetching appointments:", err);
       });
   },
   methods: {
-    submitAppointment() {
-      const payload = {
-        patientName: this.name,
-        symptoms: this.symptoms,
-        slot: this.selectedSlot
-      };
-      fetch(`${API_BASE}/appointments`, {
-        method: "POST",
+    updateStatus(appt) {
+      fetch(`${API_BASE}/appointments/${appt.appointmentId}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ status: appt.status })
       })
-        .then(res => res.json())
-        .then(() => {
-          alert("Appointment booked successfully!");
-          this.name = "";
-          this.symptoms = "";
-          this.selectedSlot = "";
-          this.mounted();
-        })
-        .catch(err => {
-          console.error("Error booking appointment:", err);
-          alert("Failed to book appointment.");
-        });
+        .then(() => alert("Status updated to: " + appt.status))
+        .catch(err => console.error("Error updating status:", err));
     }
   }
 };
